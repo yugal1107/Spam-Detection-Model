@@ -4,6 +4,7 @@ import re
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
+import os
 
 app = Flask(__name__)
 
@@ -11,6 +12,24 @@ app = Flask(__name__)
 classifier = joblib.load('spam_classifier_model.pkl')
 le = joblib.load('label_encoder.pkl')
 cv= joblib.load('countvectorizer.pkl')
+
+def classify_message(message):
+    # Preprocess the message
+    sp = re.sub('[^a-zA-Z]',' ',message)
+    sp = sp.lower()
+    sp = sp.split()
+    all_stopwords = stopwords.words('english')
+    ps = PorterStemmer()
+    sp = [ps.stem(word) for word in sp if not word in all_stopwords]
+    sp = ' '.join(sp)
+
+    # Use the loaded model and LabelEncoder object to make predictions
+    new = [sp]
+    x_new = cv.transform(new).toarray()
+    prediction = classifier.predict(x_new)
+    prediction_label = le.inverse_transform(prediction)
+
+    return prediction_label
 
 @app.route('/')
 def index():
@@ -85,11 +104,27 @@ def index():
         function classify() {
             var message = document.getElementById('message').value;
             
-            // You would send the 'message' variable to your backend for classification
-            // and receive the result back. For now, let's just display a dummy result.
-            var result = Math.random() < 0.5 ? "Not Spam" : "Spam";
+            // Send the message to the backend for classification
+            fetch('/classify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display the classification result
+                document.getElementById('result').innerText = "Result: " + data.result;
 
-            document.getElementById('result').innerText = "Result: " + result;
+                // Hide the result after 5 seconds
+                    setTimeout(function() {
+                        document.getElementById('result').innerText = '';
+                    }, 5000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
         }
     </script>
 </body>
@@ -98,27 +133,15 @@ def index():
     """
 
 @app.route('/classify', methods=['POST'])
-def classify_message():
-    # Receive the message from the request
-    message = request.form['message']
-
-    # Preprocess the message
-    sp = re.sub('[^a-zA-Z]',' ',message)
-    sp = sp.lower()
-    sp = sp.split()
-    all_stopwords = stopwords.words('english')
-    ps = PorterStemmer()
-    sp = [ps.stem(word) for word in sp if not word in all_stopwords]
-    sp = ' '.join(sp)
-
-    # Use the loaded model and LabelEncoder object to make predictions
-    new = [sp]
-    x_new = cv.transform(new).toarray()
-    prediction = classifier.predict(x_new)
-    prediction_label = le.inverse_transform(prediction)[0]
-
-    # Return the prediction result as JSON
-    return jsonify({"result": prediction_label})
+def classify():
+    message = request.json['message']
+    prediction_label = classify_message(message)
+    if prediction_label[0]== 'ham':
+        x= 'Not Spam'
+    else:
+        x='Spam'
+    return jsonify({"result": x})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=True, port=port)
