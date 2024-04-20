@@ -49,12 +49,18 @@ def index():
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f4f4f4;
-        }
+            background-image: url(https://th.bing.com/th/id/OIG2.V9eyzs9bLA998aHUOjkO?pid=ImgGn);
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;   }
         .container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
             width: 400px;
-            padding: 20px;
-            background-color: #fff;
+            padding: 30px;
+            background-color: rgba(255, 255, 255, .15);  
+            backdrop-filter: blur(10px);
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
@@ -63,23 +69,28 @@ def index():
         }
         label {
             display: block;
+            align-items: center;
+            justify-content: center;
             margin-bottom: 8px;
         }
         input[type="text"] {
-            width: 100%;
             padding: 8px;
             margin-bottom: 16px;
             border: 1px solid #ccc;
             border-radius: 4px;
         }
         button {
-            width: 100%;
+            align-items: center;
+            justify-content: center;
             padding: 10px;
+            display: inline-block;
             background-color: #007bff;
             color: #fff;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            width: 25%;
+            align-self: center;
         }
         button:hover {
             background-color: #0056b3;
@@ -96,7 +107,7 @@ def index():
         <h1>Spam Detection</h1>
         <label for="message">Enter your message:</label>
         <input type="text" id="message" placeholder="Type your message here...">
-        <button onclick="classify()">Classify</button>
+        <button onclick="classify()">Predict</button>
         <div id="result"></div>
     </div>
 
